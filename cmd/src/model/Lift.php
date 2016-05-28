@@ -4,57 +4,71 @@ namespace model;
 use model\Passenger;
 use model\PassengerStack;
 use model\OverLimitException;
+use model\LiftException;
+
 
 class Lift{
-	public static $maxFloor;
-	public $maxPassengersMove;
-    public $maxPassengersIn;
-    protected $currentFloor;
-    protected $currentPassengers;
-    protected $blockOverload = false;
-    // wait, up, down
-    protected $stateMoving; 
-    public static $callStack = [ [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                 [0, 0], 
-                                ];
+	
+	public        $maxPassengers;
+    public static $callStack = [0,0,0,0,0,0,0,0,0];  
+    public static $maxFloor;                   
+    protected     $currentFloor;
+    protected     $currentPassengers;
+    protected     $blockOverload = false;
+    protected     $stateMoving = 'up'; 
+     
 
-    public function __construct($maxFloor, $maxPassengersMove, $maxPassengersIn, $stateMoving = 'up'){
-    	if (!($maxFloor > 0 and $maxPassengersMove > 0 and $maxPassengersIn > 0)) 
-    		throw new LiftException("Incorrect init value: passengers = ".$maxPassengers.", floors = ".$maxFloor.
-                ", passengers in lift = ".$maxPassengersIn, 0); 
+    public function __construct($maxFloor, $maxPassengers){
+    	
+        if ($maxFloor < 0 or $maxPassengers < 0) 
+    		throw new LiftException("Incorrect init value: passengers = ".$maxPassengers.", floors = ".$maxFloor."\n", 0); 
     	$this->maxFloor = $maxFloor;
-    	$this->maxPassengersMove = $maxPassengersMove;
-        $this->maxPassengersIn = $maxPassengersIn;
+    	$this->maxPassengers = $maxPassengers;
     	$this->currentFloor = 0;
-    	$this->currentPassengers = new PassengersStack($maxPassengersIn);
-        $this->stateMoving = $stateMoving;
+    	$this->currentPassengers = new PassengersStack($maxPassengers);
+        //$this->stateMoving = $stateMoving;
+        print("inithialization \n");
+        print("Lift maxFloor from 0 to ".$this->maxFloor."\n");
+        print("Lift maxPassengers ".$this->maxPassengers."\n");
+        $this->printStateLift();
     }
     
-    public function checkOverload(){
-        if ($this->currentPassengers->countStack() > $this->maxPassengersMove){
-            $this->blockOverload = true;
-        } else $this->blockOverload = false;
-    }
-
-    public function moveDestFloor(){
-        if ($this->blockOverload) {
-            $numOut = $this->currentPassengers->countStack() - $this->maxPassengersMove; 
-            throw new OverLimitException("Overload, lift moving is blocked. $numOut passengers should get out \n", 1);
+    public function printCallStack(){
+        
+        $callStack = self::$callStack;
+        print("---------Call Stack------------\n");
+        for ($i=0; $i<= $this->maxFloor; $i++)
+        { 
+            print("Floor num $i,  ");
+            print($callStack[$i]);
+            print("\n");
         }
+        print("-------------------------------\n");
+    }
+    
+    public function printStateLift(){
+        
+        print("---------Lift State------------\n");
+        print("Lift currentFloor ".$this->currentFloor."\n");
+        print("Current quantity of passengers ".$this->currentPassengers."\n");
+        print("Lift stateMoving ".$this->stateMoving."\n");
+        print("blockOverload  ");
+        var_dump($this->blockOverload);
+        print("----------------------------------\n");
 
+    }
+    
+    public function moveDestFloor(){
+       
+        if ($this->blockOverload) {
+            throw new LiftException("Overload, lift moving is blocked. Check overload \n", 1);}
+        print("From current floor ".$this->currentFloor."\n");
         $destFloor = $this->currentFloor; 
         $callStack = Lift::$callStack;
         
         if ($this->stateMoving == 'up'){ 
             for ($i = $this->currentFloor; $i <= $this->maxFloor; $i++){ 
-                if ($callStack[$i][0] == 1) {
+                if ($callStack[$i] == 1) {
                     $destFloor = $i;
                     break;
                 }
@@ -62,310 +76,177 @@ class Lift{
             if ($destFloor == $this->currentFloor){
                 $this->stateMoving == 'down';
                     for ($i = $this->currentFloor; $i >=0 ; $i--){ 
-                        if ($callStack[$i][0] == 1){
+                        if ($callStack[$i] == 1){
                             $destFloor = $i;
-                            //print_r("!!!!!!!! \n");
-                            //print_r("destination, $i \n");
                             break;
                         }
                     } 
+                print("Moving to ".$destFloor."\n");
                 while ($this->currentFloor > $destFloor) {$this->moveDown();}
             }
-            else while ($this->currentFloor < $destFloor) {$this->moveUp();}
+            else {  
+                print("Moving to ".$destFloor."\n"); 
+                while ($this->currentFloor < $destFloor) {$this->moveUp();}
+            }
         }
-       
         if  ($this->stateMoving == 'down') {
-          //  print_r("dowwwwwwwwwwwwwww\n");
             for ($i = $this->currentFloor; $i >=0 ; $i--){ 
-                if ($callStack[$i][0] == 1){
+                if ($callStack[$i] == 1){
                         $destFloor = $i;
-                     //   print_r("!!!!!!!! \n");
-                      //  print_r("destination, $i \n");
                         break;
                 } 
             }
             if ($destFloor == $this->currentFloor){
                 $this->stateMoving == 'up';
-                //print_r("ifffffff\n");
                 for ($i = $this->currentFloor; $i <= $this->maxFloor; $i++){ 
-                    if ($callStack[$i][0] == 1) {
+                    if ($callStack[$i] == 1) {
                         $destFloor = $i;
                         break;
                     }
                 }
+                print("Moving to ".$destFloor."\n");
                 while ($this->currentFloor < $destFloor) {$this->moveUp();}
             }
             else {
-                //print_r("movingggggggggg down \n");
-                while ($this->currentFloor > $destFloor) {$this->moveDown();}}
+                print("Moving to ".$destFloor."\n");
+                while ($this->currentFloor > $destFloor) {$this->moveDown();}
+            }
         } 
-        self::$callStack[$destFloor][0] = 0;
-        
+        print("Lift got destination floor ".$this->currentFloor."\n");
+        self::$callStack[$destFloor] = 0;    
+    }
+
+    protected function checkOverload(){
        
+        if ($this->currentPassengers->countStack() <= $this->maxPassengers){
+            $this->blockOverload = false;
+        } else $this->blockOverload = true;
     }
  
     protected function getInLift(array $passengers){
-        foreach ($passengers as $passenger) {
-            $this->currentPassengers->push($passenger);
-        $numOut = $this->checkOverload();
-      //  if ($this->blockOverload) 
-      //    throw new OverLimitException("Overload, lift moving is blocked. ".$numOut." passenger(s) should get out");
+        
+        try { 
+                foreach ($passengers as $passenger) {
+                    $this->currentPassengers->push($passenger);
+                    print("Get into the Lift ".$passenger);
+                }
+            }
+        catch (OverLimitException $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
+            $this->blockOverload = true;
         }
-    
     }
     
     protected function getOutLift(array $passengers){
-        $passengersOut =  self::$callStack[$this->currentFloor][1];
-        if (count($passengers) < $passengersOut)
-            throw new OverLimitException("Should get out".$passengersOut."passengers \n", 2);
-        foreach ($passengers as $passenger) {
-            $this->currentPassengers->pop($passenger);
-            self::$callStack[$this->currentFloor][1] = self::$callStack[$this->currentFloor][1] -1;
-        }
         
+        try {
+            foreach ($passengers as $passenger) {
+                $this->currentPassengers->pop($passenger);
+                print("Get out the Lift ".$passenger);
+            }
+        }
+        catch (OverLimitException $e) {
+            echo 'Caught exception: ',  $e->getMessage(), "\n";
+        }
+
     }
 
     protected function moveUp(){
+        
         $this->stateMoving = 'up';
     	$this->currentFloor = $this->currentFloor + 1;
         if ($this->currentFloor == $this->maxFloor) $this->stateMoving = 'down';
     }
     
     protected function moveDown(){
+        
         $this->stateMoving = 'down';
     	$this->currentFloor = $this->currentFloor - 1;
         if ($this->currentFloor == 0) $this->stateMoving = 'up';
     }
- 
+    
+    
     public function run(){
-        print_r("inithialization \n");
-        print_r("lift maxFloor $this->maxFloor \n");
-        print_r("lift maxPassengersMove $this->maxPassengersMove \n");
-        print_r("lift maxPassengersIn $this->maxPassengersIn \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-    	print_r("lift stateMoving $this->stateMoving \n");
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("\n");
-
-        print_r("load peoples \n");
+        
         $pass1 = new Passenger(0,5);
         $pass2 = new Passenger(0,7);
         $pass3 = new Passenger(0,6);
         $pass4 = new Passenger(0,8);
-        $pass5 = new Passenger(1,6); 
+        $pass5 = new Passenger(0,6); 
         $this->getInLift([$pass1, $pass2, $pass3, $pass4, $pass5]);
         $pass1->setFloor();
         $pass2->setFloor();
         $pass3->setFloor();
         $pass4->setFloor();
-
-        print_r("Lift state before start moving \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        print_r("lift stateMoving $this->stateMoving \n");
-        print_r("\n");
-       
-        print_r("moving \n");
-        print_r("\n");
-        
+        $pass5->setFloor();
+        $this->printStateLift();
         try {
             $this->moveDestFloor();}
-        catch (OverLimitException $e) {
+        catch (LiftException $e) {
                 echo 'Caught exception: ',  $e->getMessage(), "\n";
-                print_r("Extra peoples is getting out \n");
-                $this->getOutLift([$pass5]);
                 $this->checkOverload();
-                $numpass = $this->currentPassengers->countStack();
-                print_r("current passengers $numpass \n");
-                print_r("blockOverload  ");
-                var_dump($this->blockOverload);
+                $this->printStateLift();
+                $this->printCallStack();
             }
         $this->moveDestFloor();
-        print_r("\n");
-        print_r("destination floor $this->currentFloor \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-        print_r("people get out $pass1, $pass2 \n");
-        $this->getOutLift([$pass1,$pass2]);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-       // print_r("call Stack \n");
-       // var_dump(self::$callStack);
-
-        print_r("\n");
+        $this->getOutLift([$pass1, $pass2]);
+        $this->printStateLift();
+        
         $pass6 = new Passenger(0,8);
         $pass6->callLift();
-        print_r("new call $pass6 \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-    
-        print_r("\n");
-        print_r("moving");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-
+        $this->printStateLift();
+        $this->printCallStack();
+        
         $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
-
-        print_r("lift currentFloor $this->currentFloor \n");
-        print_r("people get out $pass3 \n");
         $this->getOutLift([$pass3]);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-
-        //8
-        print_r("\n");
-        print_r("moving 8\n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift stateMoving $this->stateMoving \n");
+        $this->printStateLift();
+        $this->printCallStack();
 
         $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
+        $this->getOutLift([$pass2]);
+        $this->printStateLift();
+        $this->printCallStack();
 
-        print_r("lift currentFloor $this->currentFloor \n");
-        print_r("people get out $pass4 \n");
+        $this->moveDestFloor();
         $this->getOutLift([$pass4]);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-
-        //0
-        print_r("\n");
-        print_r("moving 0 no passengers\n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-
+        $this->printStateLift();
+        $this->printCallStack();
+        
         $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
-
-        print_r("lift currentFloor $this->currentFloor \n");
-        // print_r("people get out $pass4 \n");
-        // $this->getOutLift([$pass4]);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-
-
-        //empty stack
-        print_r("\n");
-        print_r("moving  call stack empty\n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("0000lift stateMoving $this->stateMoving \n");
-
+        $this->printStateLift();
+        $this->printCallStack();
+        
         $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
+        $this->printStateLift();
+        $this->printCallStack();
 
-        print_r("lift currentFloor $this->currentFloor \n");
-       // print_r("call Stack \n");
-       // var_dump(self::$callStack);
-        print_r("\n");
-        print_r("load peoples \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-        $pass6 = new Passenger(0,5);
         $this->getInLift([$pass6]);
         $pass6->setFloor();
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-
-        //print_r("lift currentFloor $this->currentFloor \n");
-       // print_r("call Stack \n");
-        //var_dump(self::$callStack);
+        $this->printStateLift();
+        $this->printCallStack();
         
-        //5
-        print_r("\n");
-        print_r("moving 5\n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-
-        $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
-
-        print_r("lift currentFloor $this->currentFloor \n");
-        print_r("people get out $pass6 \n");
-        $this->getOutLift([$pass6]);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-        print_r("\n");
-        print_r("load peoples \n");
-        print_r("lift currentFloor $this->currentFloor \n");
         $pass7 = new Passenger(5,3);
+        $pass7->callLift();
+        $this->printStateLift();
+        $this->printCallStack();
+        
+        $this->moveDestFloor();
         $this->getInLift([$pass7]);
         $pass7->setFloor();
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
+        $this->printStateLift();
+        $this->printCallStack();
         
-        //3
-        print_r("\n");
-        print_r("moving 3\n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("lift stateMoving $this->stateMoving \n");
-        //print_r("lift stateMoving $this->stateMoving \n");
-
         $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
-        print_r("lift currentFloor $this->currentFloor \n");
-        print_r("people get out $pass7 \n");
-        $this->getOutLift([$pass7]);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        //print_r("call Stack \n");
-        //var_dump(self::$callStack);
-       
-        //empty stack
-        print_r("\n");
-        print_r("moving  call stack empty\n");
-        print_r("blockOverload  ");
-        var_dump($this->blockOverload);
-        $numpass = $this->currentPassengers->countStack();
-        print_r("current passengers $numpass \n");
-        print_r("0000lift stateMoving $this->stateMoving \n");
-
+        $this->printStateLift();
+        $this->printCallStack();
+        
+        $this->getOutLift([$pass6]);
+        $this->printStateLift();
+        $this->printCallStack();
+        
         $this->moveDestFloor();
-        print_r("lift stateMoving $this->stateMoving \n");
-
-        print_r("lift currentFloor $this->currentFloor \n");
-       // print_r("call Stack \n");
-       // var_dump(self::$callStack);
-
+        $this->printStateLift();
+        $this->printCallStack();
     }
 
 }

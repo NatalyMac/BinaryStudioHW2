@@ -37,7 +37,7 @@ class PassengerLiftCommand extends Command
     {
         $output->writeln(array("","<info>Execute</info>",""));
 
-        $lift = new Lift(8,4,10);
+        $lift = new Lift(8,4);
         $lift->run();
     }
 }

@@ -1,6 +1,6 @@
 <?php
-
 namespace model;
+
 use model\Passenger;
 
 class PassengersStack
@@ -8,9 +8,9 @@ class PassengersStack
 	protected $stack;
 	protected $limit;
 	 
-	public function __construct($limit=10) {
+	public function __construct($limit) {
 	    $this->stack = [];
-	    $this->limit = $limit;
+	    $this->limit =$limit;
 	}
 
 	public function __toString(){

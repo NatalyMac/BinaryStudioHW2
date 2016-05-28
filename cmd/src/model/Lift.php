@@ -8,16 +8,29 @@ use model\LiftException;
 
 
 class Lift{
-	
+	/**
+     * @param  $maxPassengers int
+     * @param  $callStack array of int
+     * @param  $maxFloor int    
+     * @param  $currentFloor int 
+     * @param  $currentPassengers array of Passenger objects
+     * @param  $blockOverload boolean
+     * @param  $stateMoving = 'up', 'down';
+     */
 	public        $maxPassengers;
     public static $callStack = [0,0,0,0,0,0,0,0,0];  
     public static $maxFloor;                   
     protected     $currentFloor;
     protected     $currentPassengers;
     protected     $blockOverload = false;
-    protected     $stateMoving = 'up'; 
-     
+    protected     $stateMoving = 'up';
 
+
+    /**
+     * Lift constructor.
+     * @param $maxFloor int
+     * @param $maxPassengers int
+     */
     public function __construct($maxFloor, $maxPassengers){
     	
         if ($maxFloor < 0 or $maxPassengers < 0) 
@@ -26,13 +39,15 @@ class Lift{
     	$this->maxPassengers = $maxPassengers;
     	$this->currentFloor = 0;
     	$this->currentPassengers = new PassengersStack($maxPassengers);
-        //$this->stateMoving = $stateMoving;
         print("inithialization \n");
         print("Lift maxFloor from 0 to ".$this->maxFloor."\n");
         print("Lift maxPassengers ".$this->maxPassengers."\n");
         $this->printStateLift();
     }
-    
+
+    /**
+     * print Lift Call Stack
+     */
     public function printCallStack(){
         
         $callStack = self::$callStack;
@@ -45,7 +60,10 @@ class Lift{
         }
         print("-------------------------------\n");
     }
-    
+
+    /**
+     * print Lift State
+     */
     public function printStateLift(){
         
         print("---------Lift State------------\n");
@@ -57,7 +75,11 @@ class Lift{
         print("----------------------------------\n");
 
     }
-    
+
+    /**
+     * @throws \model\LiftException
+     * make decision about destination floor and moving direction lift according Call Stack
+     */
     public function moveDestFloor(){
        
         if ($this->blockOverload) {
@@ -116,13 +138,19 @@ class Lift{
         self::$callStack[$destFloor] = 0;    
     }
 
+    /**
+     * trigger for property blockOverLoad
+     */
     protected function checkOverload(){
        
         if ($this->currentPassengers->countStack() <= $this->maxPassengers){
             $this->blockOverload = false;
         } else $this->blockOverload = true;
     }
- 
+
+    /**
+     * @param array $passengers of objects Passenger
+     */
     protected function getInLift(array $passengers){
         
         try { 
@@ -136,7 +164,10 @@ class Lift{
             $this->blockOverload = true;
         }
     }
-    
+
+    /**
+     * @param array $passengers of objects Passenger
+     */
     protected function getOutLift(array $passengers){
         
         try {
@@ -151,21 +182,31 @@ class Lift{
 
     }
 
+    /**
+     * just lift moving till get destination up
+     */
     protected function moveUp(){
         
         $this->stateMoving = 'up';
     	$this->currentFloor = $this->currentFloor + 1;
         if ($this->currentFloor == $this->maxFloor) $this->stateMoving = 'down';
     }
-    
+
+    /**
+     * just lift moving till get destination down
+     */
     protected function moveDown(){
         
         $this->stateMoving = 'down';
     	$this->currentFloor = $this->currentFloor - 1;
         if ($this->currentFloor == 0) $this->stateMoving = 'up';
     }
-    
-    
+
+
+    /**
+     * @throws \model\LiftException
+     * test tascks 
+     */
     public function run(){
         
         $pass1 = new Passenger(0,5);

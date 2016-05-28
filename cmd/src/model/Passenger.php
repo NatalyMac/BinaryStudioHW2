@@ -5,11 +5,19 @@ use model\Lift;
 
 
 class Passenger{
-	
+	/**
+	 * @param $currentFloor int 
+	 * @param $destFloor int
+     */
 	public $currentFloor;
 	public $destFloor;
-    
-    public function __construct($currentFloor, $destFloor){
+
+	/**
+	 * Passenger constructor.
+	 * @param $currentFloor int
+	 * @param $destFloor int
+     */
+	public function __construct($currentFloor, $destFloor){
     	
     	$maxFloor = Lift::$maxFloor;
     	if (($currentFloor > $maxFloor and $currentFloor < 0) or ($destFloor > $maxFloor and $destFloor <0)) 
@@ -18,12 +26,18 @@ class Passenger{
     	$this->destFloor = $destFloor;
     	print($this);
     }
-    
-    public function __toString(){
+
+	/**
+	 * @return string
+     */
+	public function __toString(){
 		
 		return "I am passenger from floor ".$this->currentFloor." to floor ".$this->destFloor."\n";
 	}
-	
+
+	/**
+	 * add call to the CallStack inside lift
+     */
 	public function setFloor(){
 		
 		Lift::$callStack[$this->destFloor] = 1;
@@ -31,6 +45,9 @@ class Passenger{
 
 	}
 
+	/**
+	 *  add call to the CallStack outside lift
+	 */
 	public function  callLift(){
 		
 		Lift::$callStack[$this->currentFloor] = 1;

@@ -1,8 +1,2 @@
 .idea/
 vendor/
-composer.lock
-cmd/vendor
-cmd/app
-cmd/composer.lock
-cmd/composer.json
-
